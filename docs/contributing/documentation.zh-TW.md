@@ -45,4 +45,5 @@
 - 每份譯本都有正確的標頭，並指向對應的英文原文。
 - Markdown 內部連結都有效。
 
-預計在第 1c 階段加入：重新產生參考文件，若 `git diff` 有差異就失敗。
+自動產生的參考文件（`make generate`）另外檢查：CI 會重新產生 `docs/reference/` 與 `packages/api-client/`，有任何變動就失敗。
+本機的 `make docs-check` 也會對 `docs/reference/` 做相同檢查。

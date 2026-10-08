@@ -15,6 +15,14 @@
 | [ADRs](adr/README.md) | Why each significant decision was made |
 | [Documentation guide](contributing/documentation.md) | How docs are written, translated, and kept in sync with code |
 
-Generated references (API, database ERD, permissions, configuration) will
-appear under `docs/reference/` once the code exists. They are produced from
-the code and verified in CI. Do not edit them by hand.
+## Generated reference
+
+Produced from the code by `make generate` and verified in CI. English only. Do
+not edit them by hand.
+
+| Reference | Contents |
+|---|---|
+| [openapi.json](reference/openapi.json) | The API contract (OpenAPI 3) |
+| [permissions.md](reference/permissions.md) | Permissions by role, and the access rule of every route |
+| [configuration.md](reference/configuration.md) | Every `FH_*` environment variable |
+| [database.md](reference/database.md) | ER diagram of every table |
