@@ -216,8 +216,9 @@ flowchart TB
 
 ## API 合約
 
-FastAPI 產生 `openapi.json`，再由它產生 TypeScript client 與型別，放進 `packages/api-client`。
-Pydantic schema 是請求與回應格式的唯一來源。CI 會重新產生 client，若與已 commit 的內容不同就失敗。
+FastAPI 產生 [`docs/reference/openapi.json`](reference/openapi.json)，再以 `@hey-api/openapi-ts` 由它產生 TypeScript client 與型別，放進 `packages/api-client`。
+Pydantic schema 是請求與回應格式的唯一來源。Operation ID 的格式是 `<tag>_<函式名稱>`（例如 `auth_login`），因此 client 提供的是 `authLogin()`。
+`make generate` 會同時更新兩者；若任一與已 commit 的內容不同，CI 就會失敗。
 
 ## 資料
 

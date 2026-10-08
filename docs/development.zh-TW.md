@@ -48,6 +48,7 @@ make web   # http://localhost:5173，會把 /api 轉發給 API
 | `make typecheck` | mypy（strict）、tsc |
 | `make test` | pytest。標記為 `integration` 的測試需要先 `make deps-up` |
 | `make docs-check` | 譯本配對、譯本標頭、內部連結、架構圖是否同步 |
+| `make generate` | 修改端點、schema、權限、設定或 models 後，重新產生 `docs/reference/` 與 TypeScript client |
 | `make diagrams` | 把架構圖來源同步進文件並渲染檢查（[指引](contributing/diagrams.zh-TW.md)） |
 | `make check` | 以上全部。開 PR 前請執行 |
 
@@ -61,19 +62,11 @@ cd apps/api && uv run pytest -m "not integration"
 
 ## 設定
 
-API 讀取 `FH_` 開頭的環境變數，或 `apps/api/.env`。詳見 `apps/api/src/family_hub/config.py`。
+API 讀取 `FH_` 開頭的環境變數，或 `apps/api/.env`。所有變數、預設值與說明都列在自動產生的
+[設定參考文件](reference/configuration.md)（僅英文）。
 
-| 變數 | 預設值 | 意義 |
-|---|---|---|
-| `FH_ENVIRONMENT` | `development` | `development`、`test` 或 `production`。正式環境會關閉互動式 API 文件 |
-| `FH_DATABASE_URL` | 本機開發資料庫 | 使用 `asyncpg` driver 的 PostgreSQL URL |
-| `FH_REDIS_URL` | `redis://localhost:6379/0` | Redis URL |
-| `FH_SECRET_KEY` | 不安全的開發用值 | CSRF 金鑰。正式環境必填 |
-| `FH_COOKIE_SECURE` | `true` | `.env.example` 中設為 `false`，讓本機純 HTTP 也能登入 |
-
-Session 相關設定列於 [identity.zh-TW.md](platform/identity.zh-TW.md#設定)。
-
-第 1c 階段會以自動產生的設定參考文件取代這張表。
+本機開發時，`.env.example` 將 `FH_COOKIE_SECURE` 設為 `false`，讓純 HTTP 也能登入。
+Session 相關設定的說明見 [identity.zh-TW.md](platform/identity.zh-TW.md#設定)。
 
 ## 資料庫遷移
 
@@ -94,6 +87,7 @@ uv run alembic upgrade head
 | `api` | ruff、mypy、資料庫遷移、`alembic check`（models 與遷移檔一致）、對真實 PostgreSQL 與 Redis 執行 pytest |
 | `web` | ESLint、型別檢查、正式版建置 |
 | `docs` | `scripts/check_docs.py`；`scripts/diagrams.py --check --render` |
+| `generated` | 執行 `make generate`，若 `docs/reference/` 或 `packages/api-client/` 有變動就失敗 |
 | `secrets` | 以 gitleaks 掃描完整歷史 |
 
 Dependabot 每週為 Python 與 JavaScript 開一次合併的更新 PR，每月更新 GitHub Actions 與 Docker image。

@@ -1,0 +1,17 @@
+{
+  "name": "@family-hub/api-client",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TypeScript client generated from docs/reference/openapi.json. Do not edit src/.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.gen.ts"
+  },
+  "scripts": {
+    "generate": "openapi-ts"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0"
+  }
+}

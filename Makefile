@@ -1,5 +1,5 @@
 # Common development tasks. See docs/development.md.
-.PHONY: setup deps-up deps-down api web migrate seed lint typecheck test check docs-check diagrams
+.PHONY: setup deps-up deps-down api web migrate seed lint typecheck test check docs-check diagrams generate
 
 setup:            ## Install all dependencies
 	uv sync --all-packages
@@ -37,6 +37,11 @@ test:             ## Run API tests (integration tests need deps-up)
 docs-check:       ## Translation pairs, internal links, diagrams in sync
 	python3 scripts/check_docs.py
 	python3 scripts/diagrams.py --check
+	cd apps/api && uv run python -m family_hub.tools.generate --check
+
+generate:         ## Regenerate docs/reference and packages/api-client from the code
+	cd apps/api && uv run python -m family_hub.tools.generate
+	pnpm --filter @family-hub/api-client generate
 
 diagrams:         ## Sync docs/diagrams/*.mmd into the docs and render-check them
 	python3 scripts/diagrams.py

@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
+from fastapi.routing import APIRoute
 from redis.asyncio import Redis
 
 from family_hub.config import Settings, get_settings
@@ -17,6 +18,14 @@ from family_hub.platform.security.csrf import csrf_middleware
 from family_hub.platform.security.headers import security_headers_middleware
 
 API_PREFIX = "/api/v1"
+
+
+def operation_id(route: APIRoute) -> str:
+    """Stable, readable OpenAPI operation IDs: ``<tag>_<function>``, e.g. ``auth_login``.
+
+    The generated TypeScript client names its functions after these.
+    """
+    return f"{route.tags[0]}_{route.name}" if route.tags else route.name
 
 
 def create_app(settings: Settings | None = None, modules: list[Module] | None = None) -> FastAPI:
@@ -48,6 +57,7 @@ def create_app(settings: Settings | None = None, modules: list[Module] | None = 
         openapi_url=openapi_url if docs_enabled else None,
         docs_url=docs_url if docs_enabled else None,
         redoc_url=None,
+        generate_unique_id_function=operation_id,
     )
     app.state.settings = settings
     app.state.authorizer = authorizer
