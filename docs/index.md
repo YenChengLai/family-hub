@@ -6,6 +6,7 @@
 |---|---|
 | [Vision & scope](vision.md) | Why this exists, who it is for, what is in and out of scope, roadmap |
 | [Architecture](architecture.md) | How the system is structured and how modules plug in |
+| [Development](development.md) | Setting up, running, and checking the code locally; CI |
 | [Finance module](modules/finance.md) | Domain model and business rules for shared and personal ledgers |
 | [Threat model](security/threat-model.md) | What we protect, from whom, and how |
 | [ADRs](adr/README.md) | Why each significant decision was made |

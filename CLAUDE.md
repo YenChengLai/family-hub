@@ -28,6 +28,11 @@ code. Decisions and their reasons are in `docs/adr/`.
 - **Significant decisions** get a new ADR. Do not edit accepted ADRs;
   supersede them.
 
+## Commands
+
+`make check` runs everything CI runs (lint, typecheck, tests, docs check).
+See `docs/development.md` for setup and the full command list.
+
 ## Conventions
 
 - Code, identifiers, commit messages: English.

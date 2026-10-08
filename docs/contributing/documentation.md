@@ -42,10 +42,14 @@ Every translation starts with:
 If the English file changed after the `synced` date, the translation is
 stale.
 
-## Planned CI checks
+## Automated checks
 
-These checks will be added with the code skeleton:
+`scripts/check_docs.py` runs in CI, in pre-commit, and via `make docs-check`.
+It verifies that:
 
-- Regenerate reference docs and fail on `git diff`.
-- Every English doc has a `.zh-TW.md` counterpart with a valid header.
+- Every English doc has a `.zh-TW.md` counterpart, except files listed as
+  English-only in the script.
+- Every translation has a valid header pointing to its English source.
 - Internal Markdown links resolve.
+
+Planned for Phase 1c: regenerate reference docs and fail on `git diff`.
