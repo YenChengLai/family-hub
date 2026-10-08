@@ -22,6 +22,43 @@ Family Hub 從這個具體的痛點出發，再一個模組一個模組地長大
 - **運行成本趨近於零。** 只用家裡已有的硬體。
 - **文件與程式碼一致。** docs-as-code，能自動產生的自動產生，並由 CI 檢查。
 
+## 架構一覽
+
+<!-- diagram: containers -->
+```mermaid
+%% C4 level 2: the running pieces in production. Dashed = planned.
+flowchart LR
+  subgraph devices["Family devices"]
+    phone["iPhone<br/>PWA on home screen"]
+    browser["Web browser"]
+  end
+
+  subgraph tailnet["Tailscale private network"]
+    subgraph nas["Synology DS923+ · Docker Compose"]
+      caddy["Caddy<br/>TLS · static files · reverse proxy"]:::planned
+      web["Web app<br/>React + TypeScript PWA"]
+      api["API<br/>FastAPI · platform + modules"]
+      postgres[("PostgreSQL<br/>one schema per module")]
+      redis[("Redis<br/>rate limits · ephemeral state")]
+    end
+  end
+
+  phone -- "HTTPS" --> caddy
+  browser -- "HTTPS" --> caddy
+  caddy -- "/" --> web
+  caddy -- "/api/*" --> api
+  api -- "SQL" --> postgres
+  api -- "counters" --> redis
+
+  legend["Dashed border = planned"]:::legend
+
+  classDef planned stroke-dasharray: 5 5
+  classDef legend fill:none,stroke:none,font-style:italic
+```
+<!-- /diagram -->
+
+更多視角（系統情境、API 內部）請見 [docs/architecture.zh-TW.md](docs/architecture.zh-TW.md)。虛線框代表規劃中的部分。
+
 ## 預計技術堆疊
 
 | 層 | 選擇 |

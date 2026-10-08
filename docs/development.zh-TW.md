@@ -47,7 +47,8 @@ make web   # http://localhost:5173，會把 /api 轉發給 API
 | `make lint` | ruff（檢查與格式）、ESLint |
 | `make typecheck` | mypy（strict）、tsc |
 | `make test` | pytest。標記為 `integration` 的測試需要先 `make deps-up` |
-| `make docs-check` | 譯本配對、譯本標頭、內部連結 |
+| `make docs-check` | 譯本配對、譯本標頭、內部連結、架構圖是否同步 |
+| `make diagrams` | 把架構圖來源同步進文件並渲染檢查（[指引](contributing/diagrams.zh-TW.md)） |
 | `make check` | 以上全部。開 PR 前請執行 |
 
 整合測試使用獨立的資料庫（`<名稱>_test`，會自動建立）與 Redis 第 15 號資料庫，不會動到開發資料。
@@ -92,7 +93,7 @@ uv run alembic upgrade head
 |---|---|
 | `api` | ruff、mypy、資料庫遷移、`alembic check`（models 與遷移檔一致）、對真實 PostgreSQL 與 Redis 執行 pytest |
 | `web` | ESLint、型別檢查、正式版建置 |
-| `docs` | `scripts/check_docs.py` |
+| `docs` | `scripts/check_docs.py`；`scripts/diagrams.py --check --render` |
 | `secrets` | 以 gitleaks 掃描完整歷史 |
 
 Dependabot 每週為 Python 與 JavaScript 開一次合併的更新 PR，每月更新 GitHub Actions 與 Docker image。

@@ -10,27 +10,76 @@ FastAPI process hosts a shared *platform* and any number of feature
 *modules*. A React PWA talks to it via a typed client generated from the
 OpenAPI spec.
 
+> Diagrams are generated from `docs/diagrams/*.mmd` (labels in English for a single source).
+> Edit the source, then run `make diagrams`. A dashed border means planned, not yet built.
+
+### System context
+
+Who uses the system, and the hard boundary between production and the public demo.
+
+<!-- diagram: system-context -->
 ```mermaid
+%% C4 level 1: who uses Family Hub and what it talks to. Dashed = planned.
 flowchart LR
-    subgraph Devices
-        iPhone[iPhone PWA]
-        Browser[Web browser]
-    end
-    subgraph Tailnet["Tailscale (private network)"]
-        subgraph NAS["Synology NAS · Docker Compose"]
-            Caddy[Caddy<br/>static files + reverse proxy]
-            API[FastAPI<br/>platform + modules]
-            PG[(PostgreSQL)]
-            Redis[(Redis)]
-        end
-    end
-    iPhone -- HTTPS --> Caddy
-    Browser -- HTTPS --> Caddy
-    Caddy -- "/" --> Static[React build]
-    Caddy -- "/api/*" --> API
-    API --> PG
-    API --> Redis
+  family(["Family members<br/>2 adults, children later"])
+  developer(["Developer<br/>with AI assistants"])
+  visitor(["Demo visitor<br/>e.g. an interviewer"])
+
+  subgraph home["Home · Tailscale only · no path to the demo"]
+    hub["Family Hub<br/>production · real data"]
+  end
+
+  github["GitHub<br/>code · CI · Dependabot"]
+
+  subgraph cloud["Public cloud · no path to home (ADR-0010)"]
+    demo["Public demo<br/>fictional, ephemeral sandboxes"]:::planned
+  end
+
+  family -- "iPhone PWA, web" --> hub
+  developer -- "pull requests" --> github
+  github -. "deploys" .-> demo
+  visitor -- "tries it" --> demo
+
+  classDef planned stroke-dasharray: 5 5
 ```
+<!-- /diagram -->
+
+### Containers
+
+The processes that run in production and how requests flow between them.
+
+<!-- diagram: containers -->
+```mermaid
+%% C4 level 2: the running pieces in production. Dashed = planned.
+flowchart LR
+  subgraph devices["Family devices"]
+    phone["iPhone<br/>PWA on home screen"]
+    browser["Web browser"]
+  end
+
+  subgraph tailnet["Tailscale private network"]
+    subgraph nas["Synology DS923+ · Docker Compose"]
+      caddy["Caddy<br/>TLS · static files · reverse proxy"]:::planned
+      web["Web app<br/>React + TypeScript PWA"]
+      api["API<br/>FastAPI · platform + modules"]
+      postgres[("PostgreSQL<br/>one schema per module")]
+      redis[("Redis<br/>rate limits · ephemeral state")]
+    end
+  end
+
+  phone -- "HTTPS" --> caddy
+  browser -- "HTTPS" --> caddy
+  caddy -- "/" --> web
+  caddy -- "/api/*" --> api
+  api -- "SQL" --> postgres
+  api -- "counters" --> redis
+
+  legend["Dashed border = planned"]:::legend
+
+  classDef planned stroke-dasharray: 5 5
+  classDef legend fill:none,stroke:none,font-style:italic
+```
+<!-- /diagram -->
 
 The frontend and API share one origin (`/` and `/api`). This lets us use
 `SameSite` session cookies without CORS ([ADR-0007](adr/0007-cookie-session-auth.md)).
@@ -68,6 +117,65 @@ The platform owns everything that every module needs:
 | Audit | Append-only log of who changed what, when |
 | Rate limiting | Redis-backed limits, stricter for auth endpoints |
 | Module registry | Discovers modules, mounts routers, registers permissions |
+
+### Inside the API
+
+Every request passes through the same layers. Each layer only calls the one
+below it.
+
+<!-- diagram: api-components -->
+```mermaid
+%% C4 level 3: layers inside the API process. Each layer only calls the one below.
+%% Dashed = planned.
+flowchart TB
+  request(["HTTP request · /api/v1/..."])
+
+  subgraph middleware["1 · Middleware, outermost first"]
+    direction LR
+    headers["Security headers<br/>no-store · CSP (AUTH-8)"] --> csrf["CSRF check<br/>X-CSRF-Token (AUTH-7)"]
+  end
+
+  subgraph routers["2 · Routers"]
+    direction LR
+    health["/health"]
+    auth["/auth<br/>login · logout · session"]
+    module_router["/finance, other modules"]:::planned
+  end
+
+  subgraph dependencies["3 · Request dependencies"]
+    direction LR
+    principal["Principal<br/>cookie → user"]
+    permission["require_permission<br/>Casbin RBAC"]:::planned
+    limiter["Rate limiter<br/>(AUTH-4)"]
+    db["DB session<br/>1 transaction / request"]
+  end
+
+  subgraph services["4 · Services"]
+    direction LR
+    subgraph platform["Platform"]
+      identity["identity"]
+      households["households"]
+      audit["audit log"]:::planned
+    end
+    subgraph modules["Modules"]
+      finance["finance"]:::planned
+    end
+  end
+
+  subgraph stores["5 · Storage"]
+    direction LR
+    postgres[("PostgreSQL")]
+    redis[("Redis")]
+  end
+
+  cli["Admin CLI<br/>family-hub"]
+
+  request --> middleware --> routers --> dependencies --> services --> stores
+  cli --> services
+
+  classDef planned stroke-dasharray: 5 5
+```
+<!-- /diagram -->
 
 ### Roles
 

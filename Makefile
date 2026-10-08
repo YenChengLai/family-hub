@@ -1,5 +1,5 @@
 # Common development tasks. See docs/development.md.
-.PHONY: setup deps-up deps-down api web migrate seed lint typecheck test check docs-check
+.PHONY: setup deps-up deps-down api web migrate seed lint typecheck test check docs-check diagrams
 
 setup:            ## Install all dependencies
 	uv sync --all-packages
@@ -34,7 +34,12 @@ typecheck:
 test:             ## Run API tests (integration tests need deps-up)
 	cd apps/api && uv run pytest
 
-docs-check:       ## Translation pairs and internal links
+docs-check:       ## Translation pairs, internal links, diagrams in sync
 	python3 scripts/check_docs.py
+	python3 scripts/diagrams.py --check
+
+diagrams:         ## Sync docs/diagrams/*.mmd into the docs and render-check them
+	python3 scripts/diagrams.py
+	python3 scripts/diagrams.py --check --render
 
 check: lint typecheck test docs-check  ## Everything CI runs

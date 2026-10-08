@@ -47,7 +47,8 @@ same as production behind Caddy.
 | `make lint` | ruff (check and format), ESLint |
 | `make typecheck` | mypy (strict), tsc |
 | `make test` | pytest. Tests marked `integration` need `make deps-up` |
-| `make docs-check` | Translation pairs, translation headers, internal links |
+| `make docs-check` | Translation pairs, translation headers, internal links, diagrams in sync |
+| `make diagrams` | Sync diagram sources into the docs and render-check them ([guide](contributing/diagrams.md)) |
 | `make check` | All of the above. Run before opening a PR |
 
 Integration tests use a separate database (`<name>_test`, created
@@ -94,7 +95,7 @@ GitHub Actions runs on every pull request and on `main`:
 |---|---|
 | `api` | ruff, mypy, migrations, `alembic check` (models match migrations), pytest against real PostgreSQL and Redis |
 | `web` | ESLint, type check, production build |
-| `docs` | `scripts/check_docs.py` |
+| `docs` | `scripts/check_docs.py`; `scripts/diagrams.py --check --render` |
 | `secrets` | gitleaks over the full history |
 
 Dependabot opens weekly grouped updates for Python and JavaScript, and

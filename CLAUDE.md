@@ -25,6 +25,9 @@ code. Decisions and their reasons are in `docs/adr/`.
   `docs/security/threat-model.md` when the attack surface changes.
 - **Module boundaries.** No cross-module table access. See the module
   contract in `docs/architecture.md`.
+- **Architecture diagrams** live in `docs/diagrams/*.mmd`. When a change
+  affects services, routers, middleware, modules, or data stores, follow the
+  `architecture-diagrams` skill and run `make diagrams`.
 - **Significant decisions** get a new ADR. Do not edit accepted ADRs;
   supersede them.
 

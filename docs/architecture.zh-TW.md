@@ -10,27 +10,76 @@ Family Hub 是一個**模組化單體**，搭配**分離的前端**（[ADR-0002]
 一個 FastAPI 程序同時承載共用的「平台」與多個功能「模組」。
 React PWA 透過從 OpenAPI 規格自動產生的型別化 client 呼叫 API。
 
+> 架構圖由 `docs/diagrams/*.mmd` 產生（標籤統一使用英文，維持單一來源）。
+> 請修改來源檔，再執行 `make diagrams`。虛線框代表規劃中、尚未實作。
+
+### 系統情境
+
+誰在使用這個系統，以及正式環境與公開 Demo 之間的硬性邊界。
+
+<!-- diagram: system-context -->
 ```mermaid
+%% C4 level 1: who uses Family Hub and what it talks to. Dashed = planned.
 flowchart LR
-    subgraph Devices[裝置]
-        iPhone[iPhone PWA]
-        Browser[網頁瀏覽器]
-    end
-    subgraph Tailnet["Tailscale（私有網路）"]
-        subgraph NAS["Synology NAS · Docker Compose"]
-            Caddy[Caddy<br/>靜態檔案 + 反向代理]
-            API[FastAPI<br/>平台 + 模組]
-            PG[(PostgreSQL)]
-            Redis[(Redis)]
-        end
-    end
-    iPhone -- HTTPS --> Caddy
-    Browser -- HTTPS --> Caddy
-    Caddy -- "/" --> Static[React 建置檔]
-    Caddy -- "/api/*" --> API
-    API --> PG
-    API --> Redis
+  family(["Family members<br/>2 adults, children later"])
+  developer(["Developer<br/>with AI assistants"])
+  visitor(["Demo visitor<br/>e.g. an interviewer"])
+
+  subgraph home["Home · Tailscale only · no path to the demo"]
+    hub["Family Hub<br/>production · real data"]
+  end
+
+  github["GitHub<br/>code · CI · Dependabot"]
+
+  subgraph cloud["Public cloud · no path to home (ADR-0010)"]
+    demo["Public demo<br/>fictional, ephemeral sandboxes"]:::planned
+  end
+
+  family -- "iPhone PWA, web" --> hub
+  developer -- "pull requests" --> github
+  github -. "deploys" .-> demo
+  visitor -- "tries it" --> demo
+
+  classDef planned stroke-dasharray: 5 5
 ```
+<!-- /diagram -->
+
+### 容器
+
+正式環境中運行的程序，以及請求如何在它們之間流動。
+
+<!-- diagram: containers -->
+```mermaid
+%% C4 level 2: the running pieces in production. Dashed = planned.
+flowchart LR
+  subgraph devices["Family devices"]
+    phone["iPhone<br/>PWA on home screen"]
+    browser["Web browser"]
+  end
+
+  subgraph tailnet["Tailscale private network"]
+    subgraph nas["Synology DS923+ · Docker Compose"]
+      caddy["Caddy<br/>TLS · static files · reverse proxy"]:::planned
+      web["Web app<br/>React + TypeScript PWA"]
+      api["API<br/>FastAPI · platform + modules"]
+      postgres[("PostgreSQL<br/>one schema per module")]
+      redis[("Redis<br/>rate limits · ephemeral state")]
+    end
+  end
+
+  phone -- "HTTPS" --> caddy
+  browser -- "HTTPS" --> caddy
+  caddy -- "/" --> web
+  caddy -- "/api/*" --> api
+  api -- "SQL" --> postgres
+  api -- "counters" --> redis
+
+  legend["Dashed border = planned"]:::legend
+
+  classDef planned stroke-dasharray: 5 5
+  classDef legend fill:none,stroke:none,font-style:italic
+```
+<!-- /diagram -->
 
 前端與 API 位於同一個網域（`/` 與 `/api`），因此可以使用 `SameSite` 的 session cookie，
 也不需要處理 CORS（[ADR-0007](adr/0007-cookie-session-auth.zh-TW.md)）。
@@ -68,6 +117,64 @@ family-hub/
 | 稽核 | 只能新增的紀錄：誰在何時改了什麼 |
 | Rate limiting | 以 Redis 計數，登入相關端點更嚴格 |
 | 模組註冊 | 探索模組、掛載 router、註冊權限 |
+
+### API 內部
+
+每個請求都會經過相同的分層，每一層只呼叫下一層。
+
+<!-- diagram: api-components -->
+```mermaid
+%% C4 level 3: layers inside the API process. Each layer only calls the one below.
+%% Dashed = planned.
+flowchart TB
+  request(["HTTP request · /api/v1/..."])
+
+  subgraph middleware["1 · Middleware, outermost first"]
+    direction LR
+    headers["Security headers<br/>no-store · CSP (AUTH-8)"] --> csrf["CSRF check<br/>X-CSRF-Token (AUTH-7)"]
+  end
+
+  subgraph routers["2 · Routers"]
+    direction LR
+    health["/health"]
+    auth["/auth<br/>login · logout · session"]
+    module_router["/finance, other modules"]:::planned
+  end
+
+  subgraph dependencies["3 · Request dependencies"]
+    direction LR
+    principal["Principal<br/>cookie → user"]
+    permission["require_permission<br/>Casbin RBAC"]:::planned
+    limiter["Rate limiter<br/>(AUTH-4)"]
+    db["DB session<br/>1 transaction / request"]
+  end
+
+  subgraph services["4 · Services"]
+    direction LR
+    subgraph platform["Platform"]
+      identity["identity"]
+      households["households"]
+      audit["audit log"]:::planned
+    end
+    subgraph modules["Modules"]
+      finance["finance"]:::planned
+    end
+  end
+
+  subgraph stores["5 · Storage"]
+    direction LR
+    postgres[("PostgreSQL")]
+    redis[("Redis")]
+  end
+
+  cli["Admin CLI<br/>family-hub"]
+
+  request --> middleware --> routers --> dependencies --> services --> stores
+  cli --> services
+
+  classDef planned stroke-dasharray: 5 5
+```
+<!-- /diagram -->
 
 ### 角色
 
