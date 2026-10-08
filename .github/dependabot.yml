@@ -16,3 +16,8 @@ updates:
   - package-ecosystem: docker-compose
     directory: /deploy/compose
     schedule: { interval: monthly }
+    # Major image upgrades are deliberate: a database major version needs a
+    # dump and restore, and dev, CI, and production move together.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

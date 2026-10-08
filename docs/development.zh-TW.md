@@ -97,6 +97,7 @@ uv run alembic upgrade head
 | `secrets` | 以 gitleaks 掃描完整歷史 |
 
 Dependabot 每週為 Python 與 JavaScript 開一次合併的更新 PR，每月更新 GitHub Actions 與 Docker image。
+Docker image 的大版本更新會被略過：請刻意安排升級，並讓開發、CI 與正式環境維持相同版本（PostgreSQL 大版本升級需要匯出再匯入資料）。
 
 ## 已知限制
 
