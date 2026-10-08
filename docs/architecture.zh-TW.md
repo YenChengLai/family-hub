@@ -113,10 +113,10 @@ family-hub/
 |---|---|
 | 身分 | 使用者、密碼雜湊（Argon2id）、session、CSRF。見 [identity.zh-TW.md](platform/identity.zh-TW.md) |
 | 租戶 | 家庭與成員關係。每一筆領域資料都帶有 `household_id` |
-| 授權 | Casbin RBAC，以家庭作為 domain（[ADR-0006](adr/0006-casbin-rbac-with-domains.zh-TW.md)） |
-| 稽核 | 只能新增的紀錄：誰在何時改了什麼 |
+| 授權 | 每個路由的存取規則；Casbin RBAC，角色從成員關係讀取。見 [authorization.zh-TW.md](platform/authorization.zh-TW.md) |
+| 稽核 | 只能新增的紀錄：誰在何時改了什麼。見 [audit.zh-TW.md](platform/audit.zh-TW.md) |
 | Rate limiting | 以 Redis 計數，登入相關端點更嚴格 |
-| 模組註冊 | 探索模組、掛載 router、註冊權限 |
+| 模組註冊 | 依明確的 `MODULES` 清單掛載各模組的 router 並註冊其權限 |
 
 ### API 內部
 
@@ -138,13 +138,14 @@ flowchart TB
     direction LR
     health["/health"]
     auth["/auth<br/>login · logout · session"]
+    households_router["/households/{id}<br/>household · audit events"]
     module_router["/finance, other modules"]:::planned
   end
 
   subgraph dependencies["3 · Request dependencies"]
     direction LR
     principal["Principal<br/>cookie → user"]
-    permission["require_permission<br/>Casbin RBAC"]:::planned
+    permission["Access rule per route<br/>public · authenticated ·<br/>require_permission (AUTHZ-2)"]
     limiter["Rate limiter<br/>(AUTH-4)"]
     db["DB session<br/>1 transaction / request"]
   end
@@ -154,7 +155,8 @@ flowchart TB
     subgraph platform["Platform"]
       identity["identity"]
       households["households"]
-      audit["audit log"]:::planned
+      authz["authz<br/>module registry · Casbin"]
+      audit["audit log<br/>append-only (AUDIT-2)"]
     end
     subgraph modules["Modules"]
       finance["finance"]:::planned
@@ -186,16 +188,19 @@ flowchart TB
 | `adult` | 完整使用各模組 |
 | `child` | 受限。實際權限等需要時再定義 |
 
+角色可繼承：`owner` ⊇ `adult` ⊇ `child`（AUTHZ-3）。
+
 ## 模組合約
 
-模組是 `modules/` 底下的一個 Python 套件，對外只提供一個 `Module` 描述物件，平台不使用模組的其他任何東西。
+模組是 `modules/` 底下的一個 Python 套件，對外只提供一個 `Module` 描述物件，並列在 `MODULES`（`modules/__init__.py`）中，平台不使用模組的其他任何東西。
+平台本身也以相同方式描述（`platform/module.py`）。
 
 | 部分 | 說明 |
 |---|---|
 | `name` | 唯一代稱，如 `finance`。用於 URL 前綴 `/api/v1/<name>` 與資料庫 schema |
-| `router` | FastAPI 的 `APIRouter` |
-| `permissions` | 模組定義的權限字串，如 `finance.transaction.create` |
-| `default_grants` | 內建角色預設擁有哪些權限 |
+| `routers` | FastAPI 的 `APIRouter`；每個路由都以 `/<name>` 開頭 |
+| `permissions` | 模組定義的權限，如 `finance.transaction.create` |
+| `grants` | 內建角色擁有哪些權限（適用繼承） |
 | models | 放在模組專屬 PostgreSQL schema 中的 SQLAlchemy models |
 
 讓模組保持獨立、未來可拆分的規則：
@@ -203,7 +208,7 @@ flowchart TB
 1. **不跨模組存取資料表。** 模組不 join、不寫入其他模組的資料表，而是呼叫對方的 service 介面。
 2. **每個模組一個 PostgreSQL schema**（`platform`、`finance`⋯⋯）。
 3. **API 有版本號。** 所有路由都在 `/api/v1/` 底下。
-4. **授權用宣告的，不手寫判斷。** 端點透過 `require_permission("<模組>.<資源>.<動作>")` 檢查權限。
+4. **授權用宣告的，不手寫判斷。** 每個路由都宣告一個存取規則，通常是 `require_permission("<模組>.<資源>.<動作>")`，否則 API 拒絕啟動（AUTHZ-2）。
 5. **擁有者檢查在 service 層。** RBAC 回答「這個角色能不能做這個動作」；
    像「個人帳只有本人看得到」這類規則，在模組的 service 程式碼中檢查。
 

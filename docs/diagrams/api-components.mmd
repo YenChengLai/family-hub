@@ -12,13 +12,14 @@ flowchart TB
     direction LR
     health["/health"]
     auth["/auth<br/>login · logout · session"]
+    households_router["/households/{id}<br/>household · audit events"]
     module_router["/finance, other modules"]:::planned
   end
 
   subgraph dependencies["3 · Request dependencies"]
     direction LR
     principal["Principal<br/>cookie → user"]
-    permission["require_permission<br/>Casbin RBAC"]:::planned
+    permission["Access rule per route<br/>public · authenticated ·<br/>require_permission (AUTHZ-2)"]
     limiter["Rate limiter<br/>(AUTH-4)"]
     db["DB session<br/>1 transaction / request"]
   end
@@ -28,7 +29,8 @@ flowchart TB
     subgraph platform["Platform"]
       identity["identity"]
       households["households"]
-      audit["audit log"]:::planned
+      authz["authz<br/>module registry · Casbin"]
+      audit["audit log<br/>append-only (AUDIT-2)"]
     end
     subgraph modules["Modules"]
       finance["finance"]:::planned

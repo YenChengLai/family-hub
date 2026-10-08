@@ -10,6 +10,7 @@ dependencies = [
     "asyncpg>=0.32.0",
     "fastapi>=0.142.4",
     "pwdlib[argon2]>=0.3.1",
+    "pycasbin>=2.8.0",
     "pydantic-settings>=2.15.0",
     "redis>=8.1.0",
     "sqlalchemy[asyncio]>=2.1.4",
@@ -59,5 +60,5 @@ markers = ["integration: needs PostgreSQL and Redis (see docs/development.md)"]
 filterwarnings = ["error"]
 
 [[tool.mypy.overrides]]
-module = ["asyncpg"]
+module = ["asyncpg", "casbin"]
 ignore_missing_imports = true

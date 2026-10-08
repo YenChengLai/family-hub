@@ -113,10 +113,10 @@ The platform owns everything that every module needs:
 |---|---|
 | Identity | Users, password hashing (Argon2id), sessions, CSRF. See [identity.md](platform/identity.md) |
 | Tenancy | Households and memberships. Every domain row carries `household_id` |
-| Authorization | Casbin RBAC with the household as the domain ([ADR-0006](adr/0006-casbin-rbac-with-domains.md)) |
-| Audit | Append-only log of who changed what, when |
+| Authorization | Per-route access rules; Casbin RBAC with roles read from memberships. See [authorization.md](platform/authorization.md) |
+| Audit | Append-only log of who changed what, when. See [audit.md](platform/audit.md) |
 | Rate limiting | Redis-backed limits, stricter for auth endpoints |
-| Module registry | Discovers modules, mounts routers, registers permissions |
+| Module registry | Mounts each module's routers and registers its permissions from the explicit `MODULES` list |
 
 ### Inside the API
 
@@ -139,13 +139,14 @@ flowchart TB
     direction LR
     health["/health"]
     auth["/auth<br/>login · logout · session"]
+    households_router["/households/{id}<br/>household · audit events"]
     module_router["/finance, other modules"]:::planned
   end
 
   subgraph dependencies["3 · Request dependencies"]
     direction LR
     principal["Principal<br/>cookie → user"]
-    permission["require_permission<br/>Casbin RBAC"]:::planned
+    permission["Access rule per route<br/>public · authenticated ·<br/>require_permission (AUTHZ-2)"]
     limiter["Rate limiter<br/>(AUTH-4)"]
     db["DB session<br/>1 transaction / request"]
   end
@@ -155,7 +156,8 @@ flowchart TB
     subgraph platform["Platform"]
       identity["identity"]
       households["households"]
-      audit["audit log"]:::planned
+      authz["authz<br/>module registry · Casbin"]
+      audit["audit log<br/>append-only (AUDIT-2)"]
     end
     subgraph modules["Modules"]
       finance["finance"]:::planned
@@ -187,17 +189,21 @@ Roles are scoped to a household. Initial roles:
 | `adult` | Full use of the modules |
 | `child` | Restricted. Exact permissions defined when needed |
 
+Roles inherit: `owner` ⊇ `adult` ⊇ `child` (AUTHZ-3).
+
 ## Module contract
 
 A module is a Python package under `modules/` that exposes one
-`Module` descriptor. The platform consumes nothing else.
+`Module` descriptor, listed in `MODULES` (`modules/__init__.py`). The platform
+consumes nothing else. The platform itself is described the same way
+(`platform/module.py`).
 
 | Part | Description |
 |---|---|
 | `name` | Unique slug, e.g. `finance`. Used for the URL prefix `/api/v1/<name>` and the DB schema |
-| `router` | A FastAPI `APIRouter` |
-| `permissions` | Permission strings the module defines, e.g. `finance.transaction.create` |
-| `default_grants` | Which built-in roles get which permissions |
+| `routers` | FastAPI `APIRouter`s; every route starts with `/<name>` |
+| `permissions` | Permissions the module defines, e.g. `finance.transaction.create` |
+| `grants` | Which built-in roles get which permissions (inheritance applies) |
 | models | SQLAlchemy models in the module's own PostgreSQL schema |
 
 Rules that keep modules independent and extractable:
@@ -206,8 +212,9 @@ Rules that keep modules independent and extractable:
    module's tables. It calls the other module's service interface instead.
 2. **One PostgreSQL schema per module** (`platform`, `finance`, …).
 3. **Versioned API.** All routes live under `/api/v1/`.
-4. **Authorization is declared, not hand-coded.** Endpoints depend on
-   `require_permission("<module>.<resource>.<action>")`.
+4. **Authorization is declared, not hand-coded.** Every route declares one
+   access rule, usually `require_permission("<module>.<resource>.<action>")`.
+   The API refuses to start otherwise (AUTHZ-2).
 5. **Ownership is checked in the service layer.** RBAC answers "may this role
    do this action". Rules like "only the owner sees a personal ledger" are
    checked in the module's service code.

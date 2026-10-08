@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from family_hub.config import get_settings
 from family_hub.db import create_engine, create_sessionmaker
+from family_hub.platform.audit import service as audit
 from family_hub.platform.households import service as households
 from family_hub.platform.households.models import Role
 from family_hub.platform.identity import service as identity
@@ -45,6 +46,16 @@ async def create_household(db: AsyncSession, args: argparse.Namespace) -> None:
         db, email=args.owner_email, display_name=args.owner_name, password=prompt_password()
     )
     household = await households.create_household(db, name=args.name, owner=owner)
+    await audit.record(
+        db,
+        source="cli",
+        action="platform.household.create",
+        entity_type="household",
+        entity_id=household.id,
+        actor_user_id=None,
+        household_id=household.id,
+        after={"name": household.name, "owner_user_id": str(owner.id)},
+    )
     print(f"Created household {household.id} with owner {owner.email}")
 
 
@@ -53,6 +64,16 @@ async def add_member(db: AsyncSession, args: argparse.Namespace) -> None:
         db, email=args.email, display_name=args.name, password=prompt_password()
     )
     await households.add_member(db, household_id=args.household_id, user=user, role=args.role)
+    await audit.record(
+        db,
+        source="cli",
+        action="platform.member.add",
+        entity_type="membership",
+        entity_id=user.id,
+        actor_user_id=None,
+        household_id=args.household_id,
+        after={"user_id": str(user.id), "role": str(args.role)},
+    )
     print(f"Added {user.email} as {args.role} to household {args.household_id}")
 
 
