@@ -6,10 +6,10 @@ setup:            ## Install all dependencies
 	pnpm install
 
 deps-up:          ## Start PostgreSQL and Redis (Docker)
-	docker compose -f deploy/compose/dev.yml up -d --wait
+	docker compose -f deploy/compose/compose.dev.yml up -d --wait
 
 deps-down:        ## Stop PostgreSQL and Redis
-	docker compose -f deploy/compose/dev.yml down
+	docker compose -f deploy/compose/compose.dev.yml down
 
 api:              ## Run the API with auto-reload on :8000
 	cd apps/api && uv run uvicorn family_hub.main:app --reload --port 8000
