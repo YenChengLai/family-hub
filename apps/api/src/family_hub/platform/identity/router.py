@@ -2,9 +2,11 @@
 
 import hashlib
 
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 
 from family_hub.config import Settings
+from family_hub.platform.audit import service as audit
+from family_hub.platform.authz.access import authenticated, public
 from family_hub.platform.dependencies import (
     DbDep,
     PrincipalDep,
@@ -56,7 +58,7 @@ async def _session_out(db: DbDep, user: User, token: str, settings: Settings) ->
     )
 
 
-@router.post("/login", summary="Log in")
+@router.post("/login", summary="Log in", dependencies=[Depends(public)])
 async def login(
     body: LoginRequest,
     request: Request,
@@ -92,6 +94,15 @@ async def login(
         timeouts=timeouts(settings),
         user_agent=request.headers.get("user-agent"),
     )
+    await audit.record(
+        db,
+        source="api",
+        action="auth.login",
+        entity_type="user",
+        entity_id=user.id,
+        actor_user_id=user.id,
+        household_id=None,
+    )
     response.set_cookie(
         cookie_name,
         token,
@@ -104,18 +115,33 @@ async def login(
     return await _session_out(db, user, token, settings)
 
 
-@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Log out")
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Log out",
+    dependencies=[Depends(public)],
+)
 async def logout(request: Request, response: Response, db: DbDep, settings: SettingsDep) -> None:
     """Revoke the current session, if any, and clear the cookie. Always succeeds."""
     cookie_name = session_cookie_name(settings.cookie_secure)
     token = request.cookies.get(cookie_name)
     if token:
-        await service.revoke_session(db, token=token)
+        user_id = await service.revoke_session(db, token=token)
+        if user_id is not None:
+            await audit.record(
+                db,
+                source="api",
+                action="auth.logout",
+                entity_type="user",
+                entity_id=user_id,
+                actor_user_id=user_id,
+                household_id=None,
+            )
     response.delete_cookie(
         cookie_name, path="/", secure=settings.cookie_secure, httponly=True, samesite="lax"
     )
 
 
-@router.get("/session", summary="Current session")
+@router.get("/session", summary="Current session", dependencies=[Depends(authenticated)])
 async def current_session(principal: PrincipalDep, db: DbDep, settings: SettingsDep) -> SessionOut:
     return await _session_out(db, principal.user, principal.session_token, settings)

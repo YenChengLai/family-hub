@@ -1,6 +1,6 @@
 # ADR-0006: Casbin RBAC with domains for authorization
 
-- Status: Accepted
+- Status: Accepted; policy storage and watcher superseded by [ADR-0012](0012-code-defined-policies-roles-from-memberships.md)
 - Date: 2026-10-08
 
 ## Context

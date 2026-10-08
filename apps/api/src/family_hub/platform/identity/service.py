@@ -107,15 +107,18 @@ async def resolve_session(
     return session, user
 
 
-async def revoke_session(db: AsyncSession, *, token: str) -> None:
-    await db.execute(
+async def revoke_session(db: AsyncSession, *, token: str) -> uuid.UUID | None:
+    """Revoke a live session. Return its user, or ``None`` if there was nothing to revoke."""
+    user_id: uuid.UUID | None = await db.scalar(
         update(AuthSession)
         .where(
             AuthSession.token_hash == hash_session_token(token),
             AuthSession.revoked_at.is_(None),
         )
         .values(revoked_at=now())
+        .returning(AuthSession.user_id)
     )
+    return user_id
 
 
 async def revoke_all_sessions(db: AsyncSession, *, user_id: uuid.UUID) -> None:

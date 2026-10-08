@@ -43,13 +43,13 @@
 | **偽冒：** session 被竊 | `__Host-` cookie 搭配 `HttpOnly`、`Secure`、`SameSite=Lax`；只儲存 token 雜湊；登出時於伺服器端撤銷；14 天閒置與 60 天絕對逾時；每次登入都產生新 token（AUTH-5、AUTH-6） |
 | **竄改：** CSRF | 同源部署、不開放 CORS、`SameSite` cookie，所有會改變狀態的請求都必須在 `X-CSRF-Token` 帶上與 session 綁定的 HMAC token（AUTH-7） |
 | **竄改：** 注入攻擊 | 所有輸入經 Pydantic 驗證；只使用 SQLAlchemy 參數化查詢；不以字串拼接 SQL |
-| **否認** | 只能新增的稽核紀錄，記錄每次寫入的操作者、時間、修改前後的值 |
-| **資訊洩漏：** 跨家庭存取 | 每筆資料都帶 `household_id`；所有查詢都限定在呼叫者的家庭；以測試嘗試跨租戶存取 |
+| **否認** | 每次寫入都在同一個交易中寫入稽核事件；由資料庫 trigger 強制只能新增（AUDIT-1、AUDIT-2） |
+| **資訊洩漏：** 跨家庭存取 | 每筆資料與每個限定家庭的路徑都帶 `household_id`；每個請求都檢查成員關係；非成員得到 404，無法探測 ID；以測試嘗試跨家庭存取（AUTHZ-5） |
 | **資訊洩漏：** 配偶讀到個人帳 | service 層的擁有者檢查（FIN-5），並有測試 |
 | **資訊洩漏：** 機密進入公開 repo | `.env` 列入 git ignore；pre-commit 與 CI 執行 gitleaks；只使用虛構的示範資料 |
 | **資訊洩漏：** XSS | React 預設跳脫輸出；嚴格的 Content-Security-Policy；不使用 `dangerouslySetInnerHTML` |
 | **阻斷服務** | 邊緣層與 App 層的 rate limit；請求大小上限；分頁上限 |
-| **權限提升** | Casbin 預設拒絕；每個端點都宣告權限檢查；若有路由沒宣告，測試就會失敗 |
+| **權限提升** | 預設拒絕；若有路由沒有恰好一個存取規則，API 拒絕啟動；公開路由清單由測試固定；每個請求都重新讀取角色，降級立即生效（AUTHZ-1、AUTHZ-2、ADR-0012） |
 | **供應鏈** | Lockfile（uv、pnpm）；Dependabot；pip-audit、pnpm audit；Trivy 掃描 image；GitHub Actions 固定到 commit SHA |
 | **從 container 逃逸到 NAS** | 非 root 的 container；盡量使用唯讀的根檔案系統；不掛載 Docker socket；只掛載必要的 volume |
 | **資料遺失** | 每晚加密的 `pg_dump`；異地備份；演練過並寫成文件的還原流程 |

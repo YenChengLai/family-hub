@@ -7,6 +7,7 @@ tables are truncated and Redis flushed after every test.
 import asyncio
 import os
 import sys
+import uuid
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -25,7 +26,10 @@ from family_hub.platform.identity import service as identity
 
 API_DIR = Path(__file__).resolve().parents[2]
 PASSWORD = "correct horse battery staple"  # noqa: S105 - fictional test credential
-TABLES = "platform.sessions, platform.memberships, platform.households, platform.users"
+TABLES = (
+    "platform.audit_events, platform.sessions, platform.memberships, "
+    "platform.households, platform.users"
+)
 
 
 def _test_database_url() -> str:
@@ -79,25 +83,39 @@ async def clean_state(app: FastAPI) -> AsyncIterator[None]:
 
 @dataclass(frozen=True)
 class Family:
+    household_id: uuid.UUID
     owner_email: str = "alice@example.com"
     adult_email: str = "bob@example.com"
+    child_email: str = "carol@example.com"
     password: str = PASSWORD
 
 
 @pytest.fixture
 async def family(app: FastAPI) -> Family:
-    """A fictional household: Alice (owner) and Bob (adult)."""
-    fam = Family()
+    """A fictional household: Alice (owner), Bob (adult), Carol (child)."""
     async with app.state.sessionmaker() as db, db.begin():
         alice = await identity.create_user(
-            db, email=fam.owner_email, display_name="Alice", password=PASSWORD
-        )
-        bob = await identity.create_user(
-            db, email=fam.adult_email, display_name="Bob", password=PASSWORD
+            db, email="alice@example.com", display_name="Alice", password=PASSWORD
         )
         household = await households.create_household(db, name="Demo Family", owner=alice)
-        await households.add_member(db, household_id=household.id, user=bob, role=Role.ADULT)
-    return fam
+        for email, name, role in [
+            ("bob@example.com", "Bob", Role.ADULT),
+            ("carol@example.com", "Carol", Role.CHILD),
+        ]:
+            user = await identity.create_user(db, email=email, display_name=name, password=PASSWORD)
+            await households.add_member(db, household_id=household.id, user=user, role=role)
+    return Family(household_id=household.id)
+
+
+@pytest.fixture
+async def other_family(app: FastAPI) -> Family:
+    """A second, unrelated household owned by Dave."""
+    async with app.state.sessionmaker() as db, db.begin():
+        dave = await identity.create_user(
+            db, email="dave@example.com", display_name="Dave", password=PASSWORD
+        )
+        household = await households.create_household(db, name="Other Family", owner=dave)
+    return Family(household_id=household.id, owner_email="dave@example.com")
 
 
 async def login(client: AsyncClient, email: str, password: str = PASSWORD) -> dict[str, object]:

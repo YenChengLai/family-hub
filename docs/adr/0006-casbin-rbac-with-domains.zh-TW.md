@@ -2,7 +2,7 @@
 
 # ADR-0006：以 Casbin RBAC with domains 實作授權
 
-- 狀態：已採納
+- 狀態：已採納；策略儲存與 watcher 部分已被 [ADR-0012](0012-code-defined-policies-roles-from-memberships.zh-TW.md) 取代
 - 日期：2026-10-08
 
 ## 背景

@@ -43,13 +43,13 @@ on the NAS ([ADR-0010](../adr/0010-isolated-public-demo.md)).
 | **Spoofing:** stolen session | `__Host-` cookie with `HttpOnly`, `Secure`, `SameSite=Lax`; only the token hash is stored; server-side revocation on logout; 14-day idle and 60-day absolute timeouts; a new token on every login (AUTH-5, AUTH-6) |
 | **Tampering:** CSRF | Same-origin deployment, no CORS, `SameSite` cookies, and a session-bound HMAC token in `X-CSRF-Token` on every state-changing request (AUTH-7) |
 | **Tampering:** injection | Pydantic validation on every input; SQLAlchemy parameterized queries only; no raw SQL string building |
-| **Repudiation** | Append-only audit log of every write, with actor, time, before and after |
-| **Information disclosure:** cross-household access | `household_id` on every row; every query scoped by the caller's household; tests that try cross-tenant access |
+| **Repudiation** | Audit event for every write, in the same transaction; append-only enforced by a database trigger (AUDIT-1, AUDIT-2) |
+| **Information disclosure:** cross-household access | `household_id` on every row and in every household-scoped path; membership checked on every request; non-members get 404 so IDs cannot be probed; tests try cross-household access (AUTHZ-5) |
 | **Information disclosure:** personal ledger read by spouse | Ownership check in the service layer (FIN-5), with tests |
 | **Information disclosure:** secrets in a public repo | `.env` git-ignored; gitleaks in pre-commit and CI; fictional seed data only |
 | **Information disclosure:** XSS | React escaping by default; strict Content-Security-Policy; no `dangerouslySetInnerHTML` |
 | **Denial of service** | Edge and app rate limits; request size limits; pagination caps |
-| **Elevation of privilege** | Casbin deny-by-default; permission checks declared on every endpoint; a test that fails if any route lacks one |
+| **Elevation of privilege** | Deny by default; the API refuses to start if any route lacks exactly one access rule; the public-route list is pinned by a test; roles re-read on every request so demotions apply at once (AUTHZ-1, AUTHZ-2, ADR-0012) |
 | **Supply chain** | Lockfiles (uv, pnpm); Dependabot; pip-audit, pnpm audit; Trivy image scan; GitHub Actions pinned to commit SHAs |
 | **Container breakout to NAS** | Non-root containers; read-only root filesystem where possible; no Docker socket mounts; only required volumes mounted |
 | **Data loss** | Nightly encrypted `pg_dump`; off-site copy; restore rehearsed and documented |

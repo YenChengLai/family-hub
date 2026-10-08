@@ -20,7 +20,9 @@ code. Decisions and their reasons are in `docs/adr/`.
   translation in Traditional Chinese (Taiwan usage).
 - **Never hand-edit generated files** (`packages/api-client`,
   `docs/reference/`). Regenerate them.
-- **Security by default.** Every endpoint declares a permission. Every query
+- **Security by default.** Every route declares exactly one access rule
+  (`public`, `authenticated`, or `require_permission`); the API refuses to
+  start otherwise. See `docs/platform/authorization.md`. Every query
   is scoped to the caller's household. No raw SQL string building. Update
   `docs/security/threat-model.md` when the attack surface changes.
 - **Module boundaries.** No cross-module table access. See the module

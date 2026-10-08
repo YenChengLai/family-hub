@@ -6,11 +6,13 @@ whether the service and its dependencies are reachable.
 
 from typing import Literal
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from pydantic import BaseModel
 from sqlalchemy import text
 
-router = APIRouter(prefix="/health", tags=["health"])
+from family_hub.platform.authz.access import public
+
+router = APIRouter(prefix="/health", tags=["health"], dependencies=[Depends(public)])
 
 CheckStatus = Literal["ok", "error"]
 
