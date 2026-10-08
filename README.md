@@ -7,8 +7,8 @@ finances first, then a family calendar and shopping lists. It runs on a home
 NAS, is used daily by a real family, and is built in the open as a portfolio
 project.
 
-> **Status:** Design phase. This repository currently contains design
-> documents only. No application code yet.
+> **Status:** Phase 1 (platform skeleton) in progress. See the
+> [roadmap](docs/vision.md#roadmap).
 
 ## Why
 
@@ -46,6 +46,7 @@ Start at [docs/index.md](docs/index.md).
 
 - [Vision & scope](docs/vision.md)
 - [Architecture](docs/architecture.md)
+- [Development setup](docs/development.md)
 - [Finance module](docs/modules/finance.md)
 - [Threat model](docs/security/threat-model.md)
 - [Architecture Decision Records](docs/adr/README.md)

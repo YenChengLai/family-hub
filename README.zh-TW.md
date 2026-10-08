@@ -7,7 +7,7 @@
 一個自架、模組化的家庭日常系統平台。先從共同記帳開始，之後加入家庭行事曆與採買清單。
 系統跑在家中的 NAS 上，每天由真實的家庭使用，並以作品集的形式公開開發。
 
-> **狀態：** 設計階段。目前 repo 只有設計文件，尚無程式碼。
+> **狀態：** 第 1 階段（平台骨架）進行中，見[路線圖](docs/vision.zh-TW.md#路線圖)。
 
 ## 為什麼要做
 
@@ -40,6 +40,7 @@ Family Hub 從這個具體的痛點出發，再一個模組一個模組地長大
 
 - [願景與範圍](docs/vision.zh-TW.md)
 - [架構](docs/architecture.zh-TW.md)
+- [開發指南](docs/development.zh-TW.md)
 - [記帳模組](docs/modules/finance.zh-TW.md)
 - [威脅模型](docs/security/threat-model.zh-TW.md)
 - [架構決策紀錄（ADR）](docs/adr/README.zh-TW.md)

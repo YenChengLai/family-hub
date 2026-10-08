@@ -1,0 +1,30 @@
+# Install once: uvx pre-commit install
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.10
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        files: ^apps/api/
+      - id: ruff-format
+        files: ^apps/api/
+  - repo: local
+    hooks:
+      - id: docs-check
+        name: docs-check
+        entry: python3 scripts/check_docs.py
+        language: system
+        pass_filenames: false
+        files: \.md$
