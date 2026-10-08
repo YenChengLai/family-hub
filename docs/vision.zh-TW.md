@@ -44,4 +44,4 @@
 | 2. 記帳 MVP | 共同帳本（觀察模式）與個人帳本，見 [finance.zh-TW.md](modules/finance.zh-TW.md) |
 | 3. 家中部署 | NAS 上的 Docker Compose、Tailscale 存取、備份並實際演練還原 |
 | 4. 本機 Demo | `docker compose up` 搭配虛構的示範資料，README 附截圖 |
-| 之後 | 分攤與結算、收入、行事曆、採買清單、雲端沙盒 Demo |
+| 之後 | 分攤與結算、收入、AI 建議分類、行事曆、採買清單、雲端沙盒 Demo |

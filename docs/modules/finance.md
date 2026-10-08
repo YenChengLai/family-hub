@@ -19,6 +19,7 @@ erDiagram
     LEDGER ||--o{ TRANSACTION : contains
     HOUSEHOLD ||--o{ CATEGORY : defines
     CATEGORY ||--o{ TRANSACTION : classifies
+    CATEGORY ||--o{ CATEGORY : "groups (parent)"
     MEMBER ||--o{ TRANSACTION : "pays (shared)"
     MEMBER ||--o{ LEDGER : "owns (personal)"
     TRANSACTION ||--o{ SPLIT : "reserved: phase 2"
@@ -29,7 +30,7 @@ erDiagram
 |---|---|
 | **Ledger** | A book of transactions. Either `shared` (all adult members) or `personal` (exactly one owner) |
 | **Transaction** | One expense or income: amount, currency, date, category, note. In a shared ledger it also records the **payer** |
-| **Category** | Household-defined classification (e.g. groceries, utilities), of kind `expense` or `income` |
+| **Category** | Household-defined classification of kind `expense` or `income`, in two levels: a **group** (e.g. Utilities) and the **categories** inside it (e.g. Electricity, Management fee). Transactions are assigned to a category, never to a group |
 | **Split** | *Reserved.* How much of a shared transaction each member should bear |
 | **Settlement** | *Reserved.* A recorded transfer that squares up a period |
 
@@ -46,6 +47,8 @@ erDiagram
 | FIN-7 | Transactions may be dated in the past (manual back-entry). There is no bulk import in the MVP. |
 | FIN-8 | Months are calendar months in the household's time zone (default `Asia/Taipei`). |
 | FIN-9 | Deletion is soft (`deleted_at`) so the audit trail and totals can be reconstructed. |
+| FIN-10 | A transaction can be edited or deleted **only by the member who created it**. This applies to every role, including `owner`. Other members can read it but not change it. Checked in the service layer. |
+| FIN-11 | Categories have exactly two levels (group → category). Reports can show either level. |
 
 ## Shared-ledger dashboard (observation mode)
 
@@ -57,7 +60,7 @@ For a selected month:
 | Paid by member | Sum of those transactions grouped by payer |
 | Share by member | Paid by member ÷ total |
 | Monthly trend | Share by member for each of the last N months |
-| By category | Total and per-payer amounts per category |
+| By category | Total and per-payer amounts per category, and rolled up per group |
 
 The numbers below are illustrative only:
 
@@ -77,6 +80,8 @@ Out (reserved in the model, built later):
 - Income tracking in personal ledgers.
 - Accounts and credit cards, budgets, recurring transactions, charts beyond
   the dashboard.
+- AI-suggested categories (an agent proposes a category; the member
+  confirms it).
 
 ## Permissions (initial)
 
@@ -90,10 +95,21 @@ Out (reserved in the model, built later):
 | `finance.transaction.delete` | ✓ | ✓ | — |
 | `finance.category.manage` | ✓ | ✓ | — |
 
-Personal ledgers are further restricted by FIN-5.
+Personal ledgers are further restricted by FIN-5. Edits and deletes are
+further restricted to the creator by FIN-10.
 
-## Open questions
+## Default categories
 
-- May one adult edit or delete a shared transaction the other entered, or
-  only their own?
-- What is the initial category list?
+Seeded for a new household. The household can rename, add, or remove them.
+Drinks are kept separate from meals so drink spending is visible on its own.
+
+| Group | Categories |
+|---|---|
+| Food | Meals, Drinks, Groceries |
+| Utilities | Water, Electricity, Gas, Management fee, Internet & phone |
+| Household | Daily necessities, Furniture & appliances |
+| Transport | Fuel, Parking, Public transport |
+| Children | Education, Childcare & supplies |
+| Health | Medical |
+| Leisure | Entertainment, Travel |
+| Other | Other |
