@@ -1,5 +1,5 @@
 # Common development tasks. See docs/development.md.
-.PHONY: setup deps-up deps-down api web migrate lint typecheck test check docs-check
+.PHONY: setup deps-up deps-down api web migrate seed lint typecheck test check docs-check
 
 setup:            ## Install all dependencies
 	uv sync --all-packages
@@ -19,6 +19,9 @@ web:              ## Run the web dev server on :5173 (proxies /api to :8000)
 
 migrate:          ## Apply database migrations
 	cd apps/api && uv run alembic upgrade head
+
+seed:             ## Create fictional development accounts
+	cd apps/api && uv run family-hub seed-dev
 
 lint:
 	cd apps/api && uv run ruff check . && uv run ruff format --check .

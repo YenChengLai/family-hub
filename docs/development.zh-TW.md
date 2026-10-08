@@ -23,6 +23,7 @@ make setup                       # uv sync + pnpm install
 cp .env.example apps/api/.env    # 本機設定，已列入 git ignore
 make deps-up                     # 在 127.0.0.1 啟動 PostgreSQL + Redis
 make migrate                     # 套用資料庫遷移
+make seed                        # 虛構帳號：alice@example.com / bob@example.com
 uvx pre-commit install           # 每次 commit 時自動檢查
 ```
 
@@ -35,7 +36,7 @@ make api   # http://localhost:8000，互動式文件在 /api/v1/docs
 make web   # http://localhost:5173，會把 /api 轉發給 API
 ```
 
-打開 http://localhost:5173，畫面應顯示 `API: ok`。
+打開 http://localhost:5173，以 `alice@example.com` 和 `make seed` 印出的密碼登入。
 
 網頁開發伺服器會轉發 `/api`，讓瀏覽器看到的是同一個網域，與正式環境中 Caddy 的行為一致。
 
@@ -48,6 +49,8 @@ make web   # http://localhost:5173，會把 /api 轉發給 API
 | `make test` | pytest。標記為 `integration` 的測試需要先 `make deps-up` |
 | `make docs-check` | 譯本配對、譯本標頭、內部連結 |
 | `make check` | 以上全部。開 PR 前請執行 |
+
+整合測試使用獨立的資料庫（`<名稱>_test`，會自動建立）與 Redis 第 15 號資料庫，不會動到開發資料。
 
 只跑不需要外部服務的測試：
 
@@ -64,6 +67,10 @@ API 讀取 `FH_` 開頭的環境變數，或 `apps/api/.env`。詳見 `apps/api/
 | `FH_ENVIRONMENT` | `development` | `development`、`test` 或 `production`。正式環境會關閉互動式 API 文件 |
 | `FH_DATABASE_URL` | 本機開發資料庫 | 使用 `asyncpg` driver 的 PostgreSQL URL |
 | `FH_REDIS_URL` | `redis://localhost:6379/0` | Redis URL |
+| `FH_SECRET_KEY` | 不安全的開發用值 | CSRF 金鑰。正式環境必填 |
+| `FH_COOKIE_SECURE` | `true` | `.env.example` 中設為 `false`，讓本機純 HTTP 也能登入 |
+
+Session 相關設定列於 [identity.zh-TW.md](platform/identity.zh-TW.md#設定)。
 
 第 1c 階段會以自動產生的設定參考文件取代這張表。
 
@@ -83,7 +90,7 @@ uv run alembic upgrade head
 
 | Job | 檢查內容 |
 |---|---|
-| `api` | ruff、mypy、資料庫遷移、對真實 PostgreSQL 與 Redis 執行 pytest |
+| `api` | ruff、mypy、資料庫遷移、`alembic check`（models 與遷移檔一致）、對真實 PostgreSQL 與 Redis 執行 pytest |
 | `web` | ESLint、型別檢查、正式版建置 |
 | `docs` | `scripts/check_docs.py` |
 | `secrets` | 以 gitleaks 掃描完整歷史 |

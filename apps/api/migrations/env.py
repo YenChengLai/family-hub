@@ -6,6 +6,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.engine import Connection
 
+import family_hub.models  # noqa: F401  (registers all models)
 from family_hub.config import get_settings
 from family_hub.db import Base, create_engine
 

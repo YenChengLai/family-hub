@@ -21,6 +21,7 @@ make setup                       # uv sync + pnpm install
 cp .env.example apps/api/.env    # local settings, git-ignored
 make deps-up                     # PostgreSQL + Redis on 127.0.0.1
 make migrate                     # apply database migrations
+make seed                        # fictional accounts: alice@example.com / bob@example.com
 uvx pre-commit install           # run checks on every commit
 ```
 
@@ -33,7 +34,8 @@ make api   # http://localhost:8000, interactive docs at /api/v1/docs
 make web   # http://localhost:5173, proxies /api to the API
 ```
 
-Open http://localhost:5173. It should show `API: ok`.
+Open http://localhost:5173 and log in as `alice@example.com` with the password
+printed by `make seed`.
 
 The web dev server proxies `/api` so the browser sees a single origin, the
 same as production behind Caddy.
@@ -47,6 +49,9 @@ same as production behind Caddy.
 | `make test` | pytest. Tests marked `integration` need `make deps-up` |
 | `make docs-check` | Translation pairs, translation headers, internal links |
 | `make check` | All of the above. Run before opening a PR |
+
+Integration tests use a separate database (`<name>_test`, created
+automatically) and Redis database 15, so they never touch development data.
 
 To run only the tests that need no services:
 
@@ -64,6 +69,10 @@ The API reads environment variables with the `FH_` prefix, or
 | `FH_ENVIRONMENT` | `development` | `development`, `test`, or `production`. Production disables interactive API docs |
 | `FH_DATABASE_URL` | local dev database | PostgreSQL URL with the `asyncpg` driver |
 | `FH_REDIS_URL` | `redis://localhost:6379/0` | Redis URL |
+| `FH_SECRET_KEY` | insecure dev value | CSRF key. Required in production |
+| `FH_COOKIE_SECURE` | `true` | `false` in `.env.example` so login works over plain HTTP locally |
+
+Session settings are listed in [identity.md](platform/identity.md#configuration).
 
 A generated configuration reference will replace this table in Phase 1c.
 
@@ -83,7 +92,7 @@ GitHub Actions runs on every pull request and on `main`:
 
 | Job | Checks |
 |---|---|
-| `api` | ruff, mypy, migrations, pytest against real PostgreSQL and Redis |
+| `api` | ruff, mypy, migrations, `alembic check` (models match migrations), pytest against real PostgreSQL and Redis |
 | `web` | ESLint, type check, production build |
 | `docs` | `scripts/check_docs.py` |
 | `secrets` | gitleaks over the full history |

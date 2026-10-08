@@ -45,6 +45,7 @@ family-hub/
 │   │   │   ├── platform/       # auth, users, households, rbac, audit
 │   │   │   ├── modules/
 │   │   │   │   └── finance/    # one package per module
+│   │   │   ├── cli.py          # admin commands (no self-registration)
 │   │   │   └── main.py         # app factory, module registration
 │   │   ├── migrations/         # Alembic
 │   │   └── tests/
@@ -61,7 +62,7 @@ The platform owns everything that every module needs:
 
 | Concern | Responsibility |
 |---|---|
-| Identity | Users, password hashing (Argon2id), sessions |
+| Identity | Users, password hashing (Argon2id), sessions, CSRF. See [identity.md](platform/identity.md) |
 | Tenancy | Households and memberships. Every domain row carries `household_id` |
 | Authorization | Casbin RBAC with the household as the domain ([ADR-0006](adr/0006-casbin-rbac-with-domains.md)) |
 | Audit | Append-only log of who changed what, when |

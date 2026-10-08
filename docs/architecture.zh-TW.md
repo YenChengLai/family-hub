@@ -45,6 +45,7 @@ family-hub/
 │   │   │   ├── platform/       # 登入、使用者、家庭、RBAC、稽核
 │   │   │   ├── modules/
 │   │   │   │   └── finance/    # 每個模組一個套件
+│   │   │   ├── cli.py          # 管理指令（不開放自行註冊）
 │   │   │   └── main.py         # app factory、模組註冊
 │   │   ├── migrations/         # Alembic
 │   │   └── tests/
@@ -61,7 +62,7 @@ family-hub/
 
 | 面向 | 職責 |
 |---|---|
-| 身分 | 使用者、密碼雜湊（Argon2id）、session |
+| 身分 | 使用者、密碼雜湊（Argon2id）、session、CSRF。見 [identity.zh-TW.md](platform/identity.zh-TW.md) |
 | 租戶 | 家庭與成員關係。每一筆領域資料都帶有 `household_id` |
 | 授權 | Casbin RBAC，以家庭作為 domain（[ADR-0006](adr/0006-casbin-rbac-with-domains.zh-TW.md)） |
 | 稽核 | 只能新增的紀錄：誰在何時改了什麼 |
