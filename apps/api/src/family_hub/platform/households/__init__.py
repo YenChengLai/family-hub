@@ -1,0 +1,1 @@
+"""Households (tenants) and memberships."""

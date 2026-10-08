@@ -39,9 +39,9 @@
 
 | 威脅（STRIDE） | 防護措施 |
 |---|---|
-| **偽冒：** 撞庫、暴力破解 | Argon2id 雜湊；登入相關端點依 IP 與帳號限流；失敗後逐步延長等待並暫時鎖定。之後加入 TOTP 或 Passkey |
-| **偽冒：** session 被竊 | `HttpOnly`、`Secure`、`SameSite` cookie；可撤銷的伺服器端 session；閒置與絕對逾時；登入時更換 session ID |
-| **竄改：** CSRF | 同源部署、`SameSite` cookie，所有會改變狀態的請求額外要求 CSRF token 或自訂標頭 |
+| **偽冒：** 撞庫、暴力破解 | Argon2id 雜湊；每個 IP 每分鐘最多嘗試登入 10 次；同一帳號失敗 5 次即鎖定 15 分鐘；email 不存在與密碼錯誤的回應完全相同；不開放自行註冊（AUTH-1 至 AUTH-4）。之後加入 TOTP 或 Passkey |
+| **偽冒：** session 被竊 | `__Host-` cookie 搭配 `HttpOnly`、`Secure`、`SameSite=Lax`；只儲存 token 雜湊；登出時於伺服器端撤銷；14 天閒置與 60 天絕對逾時；每次登入都產生新 token（AUTH-5、AUTH-6） |
+| **竄改：** CSRF | 同源部署、不開放 CORS、`SameSite` cookie，所有會改變狀態的請求都必須在 `X-CSRF-Token` 帶上與 session 綁定的 HMAC token（AUTH-7） |
 | **竄改：** 注入攻擊 | 所有輸入經 Pydantic 驗證；只使用 SQLAlchemy 參數化查詢；不以字串拼接 SQL |
 | **否認** | 只能新增的稽核紀錄，記錄每次寫入的操作者、時間、修改前後的值 |
 | **資訊洩漏：** 跨家庭存取 | 每筆資料都帶 `household_id`；所有查詢都限定在呼叫者的家庭；以測試嘗試跨租戶存取 |
@@ -63,3 +63,5 @@
 
 - Tailscale 的協調伺服器屬於第三方。緩解方式：改為自架 Headscale。
 - 單一 NAS 是可用性的單點故障。備份只保護資料，不保證服務不中斷。
+- 依 IP 的登入限制取決於真實的用戶端 IP。代理設定錯誤會讓所有使用者共用同一個限制（見 [identity.zh-TW.md](../platform/identity.zh-TW.md#部署注意事項)）。
+- 過期的 session 資料尚未刪除。它們無法被使用，但在清理排程完成前資料表會持續增長。

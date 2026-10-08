@@ -28,3 +28,9 @@ repos:
         language: system
         pass_filenames: false
         files: \.md$
+      - id: diagrams
+        name: diagrams in sync
+        entry: python3 scripts/diagrams.py --check
+        language: system
+        pass_filenames: false
+        files: (\.md|\.mmd|\.py|compose.*\.yml)$

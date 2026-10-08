@@ -15,6 +15,7 @@
 | 決策 | `docs/adr/` | 手寫 | 英文 + 繁中 |
 | 資安 | `docs/security/` | 手寫 | 英文 + 繁中 |
 | 維運手冊 | `docs/operations/` | 手寫 | 英文 + 繁中 |
+| 架構圖 | `docs/diagrams/*.mmd`，由腳本嵌入 | 手寫（來源檔） | 英文標籤，中英共用（[指引](diagrams.zh-TW.md)） |
 | 參考文件（API、ERD、權限、設定） | `docs/reference/` | **自動產生** | 僅英文 |
 
 ## 規則

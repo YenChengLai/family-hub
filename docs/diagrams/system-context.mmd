@@ -1,0 +1,22 @@
+%% C4 level 1: who uses Family Hub and what it talks to. Dashed = planned.
+flowchart LR
+  family(["Family members<br/>2 adults, children later"])
+  developer(["Developer<br/>with AI assistants"])
+  visitor(["Demo visitor<br/>e.g. an interviewer"])
+
+  subgraph home["Home · Tailscale only · no path to the demo"]
+    hub["Family Hub<br/>production · real data"]
+  end
+
+  github["GitHub<br/>code · CI · Dependabot"]
+
+  subgraph cloud["Public cloud · no path to home (ADR-0010)"]
+    demo["Public demo<br/>fictional, ephemeral sandboxes"]:::planned
+  end
+
+  family -- "iPhone PWA, web" --> hub
+  developer -- "pull requests" --> github
+  github -. "deploys" .-> demo
+  visitor -- "tries it" --> demo
+
+  classDef planned stroke-dasharray: 5 5

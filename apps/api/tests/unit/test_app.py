@@ -3,7 +3,7 @@ from family_hub.main import create_app
 
 
 def test_api_docs_disabled_in_production() -> None:
-    app = create_app(Settings(environment="production"))
+    app = create_app(Settings(environment="production", secret_key="x" * 32))
 
     assert app.openapi_url is None
     assert app.docs_url is None

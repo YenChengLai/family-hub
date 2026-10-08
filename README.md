@@ -28,6 +28,44 @@ one concrete pain and grows module by module.
 - **Docs that match the code.** Docs-as-code, generated where possible,
   checked in CI.
 
+## Architecture at a glance
+
+<!-- diagram: containers -->
+```mermaid
+%% C4 level 2: the running pieces in production. Dashed = planned.
+flowchart LR
+  subgraph devices["Family devices"]
+    phone["iPhone<br/>PWA on home screen"]
+    browser["Web browser"]
+  end
+
+  subgraph tailnet["Tailscale private network"]
+    subgraph nas["Synology DS923+ · Docker Compose"]
+      caddy["Caddy<br/>TLS · static files · reverse proxy"]:::planned
+      web["Web app<br/>React + TypeScript PWA"]
+      api["API<br/>FastAPI · platform + modules"]
+      postgres[("PostgreSQL<br/>one schema per module")]
+      redis[("Redis<br/>rate limits · ephemeral state")]
+    end
+  end
+
+  phone -- "HTTPS" --> caddy
+  browser -- "HTTPS" --> caddy
+  caddy -- "/" --> web
+  caddy -- "/api/*" --> api
+  api -- "SQL" --> postgres
+  api -- "counters" --> redis
+
+  legend["Dashed border = planned"]:::legend
+
+  classDef planned stroke-dasharray: 5 5
+  classDef legend fill:none,stroke:none,font-style:italic
+```
+<!-- /diagram -->
+
+More views (system context, API internals) are in
+[docs/architecture.md](docs/architecture.md). Dashed borders mark planned parts.
+
 ## Planned stack
 
 | Layer | Choice |

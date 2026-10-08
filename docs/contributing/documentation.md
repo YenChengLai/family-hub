@@ -13,6 +13,7 @@ The reasoning is in [ADR-0011](../adr/0011-bilingual-docs-as-code.md).
 | Decisions | `docs/adr/` | Hand | English + zh-TW |
 | Security | `docs/security/` | Hand | English + zh-TW |
 | Operations runbooks | `docs/operations/` | Hand | English + zh-TW |
+| Architecture diagrams | `docs/diagrams/*.mmd`, embedded by script | Hand (source) | English labels, shared ([guide](diagrams.md)) |
 | Reference (API, ERD, permissions, config) | `docs/reference/` | **Generated** | English only |
 
 ## Rules

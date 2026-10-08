@@ -39,9 +39,9 @@ on the NAS ([ADR-0010](../adr/0010-isolated-public-demo.md)).
 
 | Threat (STRIDE) | Control |
 |---|---|
-| **Spoofing:** credential stuffing, brute force | Argon2id hashing; per-IP and per-account rate limits on auth endpoints; progressive delay and temporary lockout. TOTP or passkeys later |
-| **Spoofing:** stolen session | `HttpOnly`, `Secure`, `SameSite` cookies; server-side sessions that can be revoked; idle and absolute timeouts; rotate the session ID on login |
-| **Tampering:** CSRF | Same-origin deployment, `SameSite` cookies, plus a CSRF token or required custom header on state-changing requests |
+| **Spoofing:** credential stuffing, brute force | Argon2id hashing; 10 login attempts per IP per minute; 5 failures lock an account for 15 minutes; identical responses for unknown e-mail and wrong password; no self-registration (AUTH-1 to AUTH-4). TOTP or passkeys later |
+| **Spoofing:** stolen session | `__Host-` cookie with `HttpOnly`, `Secure`, `SameSite=Lax`; only the token hash is stored; server-side revocation on logout; 14-day idle and 60-day absolute timeouts; a new token on every login (AUTH-5, AUTH-6) |
+| **Tampering:** CSRF | Same-origin deployment, no CORS, `SameSite` cookies, and a session-bound HMAC token in `X-CSRF-Token` on every state-changing request (AUTH-7) |
 | **Tampering:** injection | Pydantic validation on every input; SQLAlchemy parameterized queries only; no raw SQL string building |
 | **Repudiation** | Append-only audit log of every write, with actor, time, before and after |
 | **Information disclosure:** cross-household access | `household_id` on every row; every query scoped by the caller's household; tests that try cross-tenant access |
@@ -66,3 +66,7 @@ on the NAS ([ADR-0010](../adr/0010-isolated-public-demo.md)).
   self-hosted Headscale.
 - A single NAS is a single point of failure for availability. Backups cover
   data, not uptime.
+- Per-IP login limits depend on the real client IP. A misconfigured proxy
+  makes all users share one limit (see [identity.md](../platform/identity.md#deployment-notes)).
+- Expired session rows are not yet deleted. They cannot be used, but the
+  table grows until a cleanup job exists.

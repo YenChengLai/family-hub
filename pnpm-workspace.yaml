@@ -1,3 +1,7 @@
 packages:
   - apps/web
   - packages/*
+
+# puppeteer downloads the headless browser that mermaid-cli renders with.
+onlyBuiltDependencies:
+  - puppeteer
