@@ -66,6 +66,11 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    env:
+      # Render with the runner's preinstalled Chrome. Puppeteer's own download
+      # is skipped when pnpm restores packages from its cache.
+      PUPPETEER_SKIP_DOWNLOAD: "1"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: python3 scripts/check_docs.py

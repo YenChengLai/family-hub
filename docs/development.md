@@ -99,7 +99,10 @@ GitHub Actions runs on every pull request and on `main`:
 | `secrets` | gitleaks over the full history |
 
 Dependabot opens weekly grouped updates for Python and JavaScript, and
-monthly updates for GitHub Actions and Docker images.
+monthly updates for GitHub Actions and Docker images. Major versions of Docker
+images are skipped: upgrade them deliberately, keeping dev, CI, and
+production on the same version (a PostgreSQL major upgrade needs a dump and
+restore).
 
 ## Known constraints
 
