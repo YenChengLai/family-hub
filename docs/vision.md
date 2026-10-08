@@ -45,4 +45,4 @@ Each phase ships something usable before the next starts.
 | 2. Finance MVP | Shared ledger (observation mode) and personal ledger, see [finance.md](modules/finance.md) |
 | 3. Home deployment | Docker Compose on the NAS, Tailscale access, backups with a tested restore |
 | 4. Local demo | `docker compose up` with fictional seed data, screenshots in README |
-| Later | Splits & settlements, income, calendar, shopping list, cloud sandbox demo |
+| Later | Splits & settlements, income, AI-suggested categories, calendar, shopping list, cloud sandbox demo |
