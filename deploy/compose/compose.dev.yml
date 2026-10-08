@@ -4,7 +4,7 @@ name: family-hub-dev
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: family_hub
       POSTGRES_PASSWORD: family_hub  # local dev only, never used elsewhere
