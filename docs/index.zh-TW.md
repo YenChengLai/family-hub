@@ -17,5 +17,13 @@
 | [ADR](adr/README.zh-TW.md) | 每個重大決策的理由 |
 | [文件撰寫指引](contributing/documentation.zh-TW.md) | 文件如何撰寫、翻譯並與程式碼保持同步 |
 
-程式碼完成後，自動產生的參考文件（API、資料庫 ERD、權限表、環境設定）會放在 `docs/reference/`。
-這些文件從程式碼產生並由 CI 驗證，請勿手動編輯。
+## 自動產生的參考文件
+
+由 `make generate` 從程式碼產生，並由 CI 驗證。僅有英文版，請勿手動編輯。
+
+| 參考文件 | 內容 |
+|---|---|
+| [openapi.json](reference/openapi.json) | API 合約（OpenAPI 3） |
+| [permissions.md](reference/permissions.md) | 各角色的權限，以及每個路由的存取規則 |
+| [configuration.md](reference/configuration.md) | 所有 `FH_*` 環境變數 |
+| [database.md](reference/database.md) | 所有資料表的 ER 圖 |

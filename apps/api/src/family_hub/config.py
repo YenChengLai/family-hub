@@ -11,7 +11,9 @@ INSECURE_DEV_SECRET = "dev-only-insecure-secret-change-me"  # noqa: S105 - rejec
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="FH_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="FH_", env_file=".env", extra="ignore", use_attribute_docstrings=True
+    )
 
     environment: Literal["development", "test", "production"] = "development"
     """Deployment environment. Controls docs exposure and other safety switches."""
@@ -22,7 +24,7 @@ class Settings(BaseSettings):
     """SQLAlchemy URL for PostgreSQL, using the asyncpg driver."""
 
     redis_url: RedisDsn = RedisDsn("redis://localhost:6379/0")
-    """Redis URL for rate limits and policy notifications."""
+    """Redis URL for rate limits and other ephemeral state."""
 
     secret_key: SecretStr = SecretStr(INSECURE_DEV_SECRET)
     """Key for deriving CSRF tokens. Must be set to a long random value in production."""

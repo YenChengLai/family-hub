@@ -53,4 +53,6 @@ It verifies that:
 - Every translation has a valid header pointing to its English source.
 - Internal Markdown links resolve.
 
-Planned for Phase 1c: regenerate reference docs and fail on `git diff`.
+Generated references (`make generate`) are checked separately: CI regenerates
+`docs/reference/` and `packages/api-client/` and fails if anything changed.
+`make docs-check` runs the same check for `docs/reference/` locally.

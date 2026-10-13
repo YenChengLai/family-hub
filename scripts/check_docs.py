@@ -14,7 +14,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # Files that are intentionally English-only.
-ENGLISH_ONLY = {"CLAUDE.md", "apps/api/README.md", ".github/pull_request_template.md"}
+ENGLISH_ONLY = {
+    "CLAUDE.md",
+    "apps/api/README.md",
+    "packages/api-client/README.md",
+    ".github/pull_request_template.md",
+}
 SKIP_DIRS = {"node_modules", "dist", "dev-dist", "reference"}
 HEADER = re.compile(r"^<!-- translation-of: (\S+) \| synced: \d{4}-\d{2}-\d{2} -->$")
 LINK = re.compile(r"\]\(([^)\s#]+)(?:#[^)]*)?\)")

@@ -224,10 +224,12 @@ entry.
 
 ## API contract
 
-FastAPI generates `openapi.json`. A TypeScript client and types are
-generated from it into `packages/api-client`. Pydantic schemas are the single
-source of truth for request and response shapes. CI regenerates the client
-and fails if it differs from what is committed.
+FastAPI generates [`docs/reference/openapi.json`](reference/openapi.json). A
+TypeScript client and types are generated from it into `packages/api-client`
+with `@hey-api/openapi-ts`. Pydantic schemas are the single source of truth for
+request and response shapes. Operation IDs are `<tag>_<function>` (for example
+`auth_login`), so the client exposes `authLogin()`. `make generate` refreshes
+both; CI fails if either differs from what is committed.
 
 ## Data
 

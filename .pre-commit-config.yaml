@@ -1,4 +1,6 @@
 # Install once: uvx pre-commit install
+# Generated files are rewritten by `make generate`, never by hooks.
+exclude: ^(docs/reference/|packages/api-client/src/)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

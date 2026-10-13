@@ -36,7 +36,9 @@ code. Decisions and their reasons are in `docs/adr/`.
 ## Commands
 
 `make check` runs everything CI runs (lint, typecheck, tests, docs check).
-See `docs/development.md` for setup and the full command list.
+After changing endpoints, schemas, permissions, settings, or models, run
+`make generate` and commit the regenerated `docs/reference/` and
+`packages/api-client/`. See `docs/development.md` for the full command list.
 
 ## Conventions
 

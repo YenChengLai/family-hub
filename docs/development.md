@@ -48,6 +48,7 @@ same as production behind Caddy.
 | `make typecheck` | mypy (strict), tsc |
 | `make test` | pytest. Tests marked `integration` need `make deps-up` |
 | `make docs-check` | Translation pairs, translation headers, internal links, diagrams in sync |
+| `make generate` | Regenerate `docs/reference/` and the TypeScript client after changing endpoints, schemas, permissions, settings, or models |
 | `make diagrams` | Sync diagram sources into the docs and render-check them ([guide](contributing/diagrams.md)) |
 | `make check` | All of the above. Run before opening a PR |
 
@@ -63,19 +64,12 @@ cd apps/api && uv run pytest -m "not integration"
 ## Configuration
 
 The API reads environment variables with the `FH_` prefix, or
-`apps/api/.env`. See `apps/api/src/family_hub/config.py`.
+`apps/api/.env`. Every variable, its default, and its meaning are listed in the
+generated [configuration reference](reference/configuration.md).
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `FH_ENVIRONMENT` | `development` | `development`, `test`, or `production`. Production disables interactive API docs |
-| `FH_DATABASE_URL` | local dev database | PostgreSQL URL with the `asyncpg` driver |
-| `FH_REDIS_URL` | `redis://localhost:6379/0` | Redis URL |
-| `FH_SECRET_KEY` | insecure dev value | CSRF key. Required in production |
-| `FH_COOKIE_SECURE` | `true` | `false` in `.env.example` so login works over plain HTTP locally |
-
-Session settings are listed in [identity.md](platform/identity.md#configuration).
-
-A generated configuration reference will replace this table in Phase 1c.
+For local development, `.env.example` sets `FH_COOKIE_SECURE=false` so login
+works over plain HTTP. Session settings are explained in
+[identity.md](platform/identity.md#configuration).
 
 ## Database migrations
 
@@ -96,6 +90,7 @@ GitHub Actions runs on every pull request and on `main`:
 | `api` | ruff, mypy, migrations, `alembic check` (models match migrations), pytest against real PostgreSQL and Redis |
 | `web` | ESLint, type check, production build |
 | `docs` | `scripts/check_docs.py`; `scripts/diagrams.py --check --render` |
+| `generated` | `make generate`, then fails if `docs/reference/` or `packages/api-client/` changed |
 | `secrets` | gitleaks over the full history |
 
 Dependabot opens weekly grouped updates for Python and JavaScript, and

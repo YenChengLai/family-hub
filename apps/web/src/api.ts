@@ -1,13 +1,24 @@
-// Minimal hand-written API helper. Phase 1c replaces this with a client
-// generated from the OpenAPI spec (docs/adr/0004-...).
+// Session helpers on top of the client generated from the OpenAPI spec
+// (packages/api-client, regenerated with `make generate`).
 
-export type Role = "owner" | "adult" | "child";
+import { authCurrentSession, authLogin, authLogout, type SessionOut } from "@family-hub/api-client";
+import { client } from "@family-hub/api-client/client";
 
-export interface SessionInfo {
-  user: { id: string; email: string; display_name: string };
-  memberships: { household_id: string; household_name: string; role: Role }[];
-  csrf_token: string;
-}
+export type { Role, SessionOut as SessionInfo } from "@family-hub/api-client";
+
+// Same origin as the page; the session cookie travels automatically.
+client.setConfig({ baseUrl: "", credentials: "same-origin" });
+
+// Held in memory only. On reload it is fetched again from /auth/session.
+let csrfToken = "";
+
+// Every state-changing request carries the CSRF token (AUTH-7).
+client.interceptors.request.use((request) => {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    request.headers.set("X-CSRF-Token", csrfToken || "none");
+  }
+  return request;
+});
 
 export class ApiError extends Error {
   constructor(
@@ -18,49 +29,34 @@ export class ApiError extends Error {
   }
 }
 
-// Held in memory only. On reload it is fetched again from /auth/session.
-let csrfToken = "";
-
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (body !== undefined) headers["Content-Type"] = "application/json";
-  if (method !== "GET") headers["X-CSRF-Token"] = csrfToken || "none";
-
-  const response = await fetch(`/api/v1${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-    credentials: "same-origin",
-  });
-  if (!response.ok) {
-    const detail = await response
-      .json()
-      .then((data: { detail?: unknown }) => (typeof data.detail === "string" ? data.detail : ""))
-      .catch(() => "");
-    throw new ApiError(response.status, detail || response.statusText);
-  }
-  return (response.status === 204 ? undefined : await response.json()) as T;
+function fail(response: Response | undefined, error: unknown): never {
+  const detail =
+    typeof error === "object" && error !== null && "detail" in error && typeof error.detail === "string"
+      ? error.detail
+      : "";
+  throw new ApiError(response?.status ?? 0, detail || response?.statusText || "Network error");
 }
 
-function remember(session: SessionInfo): SessionInfo {
+function remember(session: SessionOut): SessionOut {
   csrfToken = session.csrf_token;
   return session;
 }
 
-export async function getSession(): Promise<SessionInfo | null> {
-  try {
-    return remember(await request<SessionInfo>("GET", "/auth/session"));
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 401) return null;
-    throw err;
-  }
+export async function getSession(): Promise<SessionOut | null> {
+  const { data, error, response } = await authCurrentSession();
+  if (response?.status === 401) return null;
+  if (!data) fail(response, error);
+  return remember(data);
 }
 
-export async function login(email: string, password: string): Promise<SessionInfo> {
-  return remember(await request<SessionInfo>("POST", "/auth/login", { email, password }));
+export async function login(email: string, password: string): Promise<SessionOut> {
+  const { data, error, response } = await authLogin({ body: { email, password } });
+  if (!data) fail(response, error);
+  return remember(data);
 }
 
 export async function logout(): Promise<void> {
-  await request<unknown>("POST", "/auth/logout");
+  const { error, response } = await authLogout();
+  if (!response?.ok) fail(response, error);
   csrfToken = "";
 }

@@ -7,8 +7,8 @@ finances first, then a family calendar and shopping lists. It runs on a home
 NAS, is used daily by a real family, and is built in the open as a portfolio
 project.
 
-> **Status:** Phase 1 (platform skeleton) in progress. See the
-> [roadmap](docs/vision.md#roadmap).
+> **Status:** Phase 1 (platform skeleton) complete. Phase 2 (finance MVP) is
+> next. See the [roadmap](docs/vision.md#roadmap).
 
 ## Why
 
