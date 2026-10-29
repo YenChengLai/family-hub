@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
 dependencies = [
-    "alembic>=1.20.0",
+    "alembic>=1.20.1",
     "asyncpg>=0.32.0",
     "fastapi>=0.142.4",
     "pwdlib[argon2]>=0.3.1",
